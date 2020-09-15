@@ -12,13 +12,26 @@
     - apt-transport-https
   when: ansible_os_family == "Debian"
 
-- name: Install pygpgme and yum-utils
+- name: Install Dependencies for the RedHat Family
   yum: name={{ packages }} state=present update_cache=true
   vars:
     packages:
-    - pygpgme
     - yum-utils
-  when: ansible_os_family == "RedHat"
+    - pygpgme
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version < 8) or ansible_os_family == "RedHat"
+
+- name: Install pip dependencies when CentOS version > 7
+  yum: name={{ packages }} state=present update_cache=true
+  vars:
+    packages:
+      - python3
+      - python3-devel
+      - "@Development tools"
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version > 7
+
+- name: Install pygpgme when CentOS version > 7
+  pip: name=pygpgme state=present
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version > 7
 
   # {{ repository }}/gpgkey URL works for both legacy and modern public repositories.
 - name: Add {{repository}} GPG key to apt-key
